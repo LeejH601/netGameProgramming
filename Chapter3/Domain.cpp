@@ -1,5 +1,6 @@
 #include "..\Common.h"
 #include <iostream>
+#include <Windows.h>
 
 
 int main()
@@ -37,8 +38,13 @@ int main()
 			char ipv4str[INET_ADDRSTRLEN];
 			inet_ntop(AF_INET,  (struct in_addr*)(ipv4hostent->h_addr_list[hostIPIndex]), ipv4str, INET_ADDRSTRLEN);
 			printf("호스트 IP주소 [%d] : %s\n", hostIPIndex, ipv4str);
+			/*char str[50] = { "tracert " };
+			system(strcat(str, ipv4str));*/
 			++hostIPIndex;
 		}
+		printf("\n");
+		char str[50] = { "nslookup " };
+		system(strcat(str, domainInput.c_str()));
 	}
 	return 0;
 }
