@@ -3,12 +3,19 @@
 #include <filesystem>
 #include <string>
 
-#define SERVERPORT 9000
-#define BUFSIZE 512
+char* SERVERIP = (char*)"127.0.0.1";
+#define SERVERPORT 8999
+#define BUFSIZE 4096
 
 int main(int argc, char* argv[])
 {
 	int retval;
+	std::string root_path;
+	
+	if (argc > 1) {
+		root_path = "C:\\testFolder\\";
+	}
+	
 
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -37,7 +44,6 @@ int main(int argc, char* argv[])
 
 	std::string file_name;
 	std::ofstream recv_file;
-	std::string file_path = "D:\\testfolder\\";
 
 	struct file_metaData {
 		int nfilename;
@@ -82,20 +88,30 @@ int main(int argc, char* argv[])
 		printf("[TCP 서버] 파일 이름 : %s\n", file_name.data());
 		printf("[TCP 서버] 파일 크기 : %d\n", meta_data.nfilesize);
 
+		std::string file_path = root_path.c_str();
+
 		file_path += file_name.data();
 		printf("[TCP 서버] 저장 경로 : %s\n", file_path.data());
 		recv_file.open(file_path.c_str(), std::ios_base::binary);
 
 		CONSOLE_SCREEN_BUFFER_INFO cs_Info;
 		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cs_Info);
-		
+
 		long current_file_recv = 0;
 
 		while (true)
 		{
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cs_Info.dwCursorPosition);
 
-			retval = recv(client_sock, (char*)&len, sizeof(len), MSG_WAITALL);
+			/*retval = recv(client_sock, (char*)&len, sizeof(len), MSG_WAITALL);
+			if (retval == SOCKET_ERROR) {
+				err_display("recv()");
+				break;
+			}
+			else if (retval == 0)
+				break;*/
+
+			retval = recv(client_sock, buf, BUFSIZE, MSG_WAITALL);
 			if (retval == SOCKET_ERROR) {
 				err_display("recv()");
 				break;
@@ -103,16 +119,8 @@ int main(int argc, char* argv[])
 			else if (retval == 0)
 				break;
 
-			retval = recv(client_sock, buf, len, MSG_WAITALL);
-			if (retval == SOCKET_ERROR) {
-				err_display("recv()");
-				break;
-			}
-			else if (retval == 0)
-				break;
-
-			recv_file.write(buf, len);
-			current_file_recv += len;
+			recv_file.write(buf, retval);
+			current_file_recv += retval;
 			printf("수신율 : %.2f%%", 100.0f * (float(current_file_recv) / float(meta_data.nfilesize)));
 		}
 
